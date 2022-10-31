@@ -1,18 +1,20 @@
-namespace App.WindowsService;
+namespace FolderListener.Background.Services;
 
 public class FolderService : IFolderService
 {
-    private readonly ILogger _logger;
+    private readonly ILogger<FolderService> _logger;
     private readonly FolderSerivceConfig _config;
     private readonly FileSystemWatcher _fileSystemWatcher;
 
     public FolderService(
-        ILogger logger,
+        ILogger<FolderService> logger,
         IConfiguration config
     )
     {
         _logger = logger;
-        _config = config.GetSection("FolderListener").Get<FolderSerivceConfig>();
+        var sectionName = typeof(FolderService).Name;
+        var cfg = config.GetSection(sectionName);
+        _config = config.GetSection(sectionName).Get<FolderSerivceConfig>();
         _fileSystemWatcher = new FileSystemWatcher(_config.Path)
         {
             Filter = "*.mp3",
@@ -23,10 +25,10 @@ public class FolderService : IFolderService
 
     public void StartListening()
     {
-        foreach(var eventType in _config.Events)
+        foreach (var eventType in _config.Events)
         {
-             switch(eventType)
-             {
+            switch (eventType)
+            {
                 case "Create":
                     _fileSystemWatcher.Changed += HandleChangedEvent;
                     break;
@@ -36,7 +38,7 @@ public class FolderService : IFolderService
                 case "Delete":
                     _fileSystemWatcher.Deleted += DeleteEventHandler;
                     break;
-             }
+            }
         }
         _fileSystemWatcher.Renamed += RenameEventHandler;
     }
@@ -62,4 +64,8 @@ public class FolderService : IFolderService
     }
 }
 
-public record FolderSerivceConfig(string Path, string[] Events);
+public class FolderSerivceConfig//(string Path, string[] Events)
+{
+    public string Path { get; set; }
+    public string[] Events { get; set; }
+}

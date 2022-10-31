@@ -1,19 +1,22 @@
-namespace App.WindowsService;
+namespace FolderListener.Background.Services;
 
 public sealed class WindowsBackgroundService : BackgroundService
 {
     private readonly JokeService _jokeService;
     private readonly ILogger<WindowsBackgroundService> _logger;
+    private readonly IFolderService _folderSerivce;
 
     public WindowsBackgroundService(
         JokeService jokeService,
-        ILogger<WindowsBackgroundService> logger) =>
-        (_jokeService, _logger) = (jokeService, logger);
+        ILogger<WindowsBackgroundService> logger,
+        IFolderService folderSerivce) =>
+        (_jokeService, _logger, _folderSerivce) = (jokeService, logger, folderSerivce);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         try
         {
+            _folderSerivce.StartListening();
             while (!stoppingToken.IsCancellationRequested)
             {
                 string joke = _jokeService.GetJoke();
@@ -24,7 +27,7 @@ public sealed class WindowsBackgroundService : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{Message}", ex.Message);
+            _logger.LogWarning(ex, "{Message}", ex.Message);
 
             // Terminates this process and returns an exit code to the operating system.
             // This is required to avoid the 'BackgroundServiceExceptionBehavior', which

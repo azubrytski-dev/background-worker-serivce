@@ -1,19 +1,24 @@
-using App.WindowsService;
+using FolderListener.Background.Services;
 using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.Extensions.Logging.EventLog;
 
-using IHost host = Host.CreateDefaultBuilder(args)
+using IHost builder = Host.CreateDefaultBuilder(args)
     .UseWindowsService(options =>
     {
-        options.ServiceName = ".NET Joke Service";
+        options.ServiceName = "Folder Listener Service";
     })
     .ConfigureServices(services =>
     {
+        var configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json")
+            .Build();
+
         LoggerProviderOptions.RegisterProviderOptions<
             EventLogSettings, EventLogLoggerProvider>(services);
 
         services.AddSingleton<JokeService>();
-        services.AddSingleton<IConfiguration>();
+        services.AddSingleton<IConfiguration>(configuration);
+        services.AddTransient<IFolderService, FolderService>();
         services.AddHostedService<WindowsBackgroundService>();
     })
     .ConfigureLogging((context, logging) =>
@@ -24,4 +29,4 @@ using IHost host = Host.CreateDefaultBuilder(args)
     })
     .Build();
 
-await host.RunAsync();
+await builder.RunAsync();

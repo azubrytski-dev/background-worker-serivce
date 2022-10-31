@@ -1,4 +1,4 @@
-namespace App.WindowsService
+namespace FolderListener.Background.Services
 {
     public interface IFolderService
     {
