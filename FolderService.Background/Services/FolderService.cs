@@ -13,12 +13,12 @@ public class FolderService : IFolderService
     {
         _logger = logger;
         var sectionName = typeof(FolderService).Name;
-        var cfg = config.GetSection(sectionName);
         _config = config.GetSection(sectionName).Get<FolderSerivceConfig>();
         _fileSystemWatcher = new FileSystemWatcher(_config.Path)
         {
-            Filter = "*.mp3",
-            NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size | NotifyFilters.Attributes,
+            Filter = _config.Filter,
+            IncludeSubdirectories = true,
+            NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size | NotifyFilters.Attributes | NotifyFilters.DirectoryName,
             EnableRaisingEvents = true
         };
     }
@@ -60,12 +60,15 @@ public class FolderService : IFolderService
 
     private void HandleChangedEvent(object sender, FileSystemEventArgs e)
     {
+        if (e.ChangeType != WatcherChangeTypes.Changed) return;
+
         _logger.LogWarning($"{e.Name} has been changed");
     }
 }
 
-public class FolderSerivceConfig//(string Path, string[] Events)
+public class FolderSerivceConfig
 {
-    public string Path { get; set; }
-    public string[] Events { get; set; }
+    public string Path { get; set; } = string.Empty;
+    public string Filter { get; set; } = string.Empty;
+    public string[] Events { get; set; } = Array.Empty<string>();
 }
